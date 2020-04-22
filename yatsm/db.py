@@ -2,7 +2,13 @@ import json
 
 from walrus import Database
 
-db = Database(host="localhost", port=6379, db=0)
+from yatsm.settings import settings
+
+db = Database(
+    host=settings.redis_dsn.host,
+    port=settings.redis_dsn.port,
+    db=settings.redis_dsn.path[-1],
+)
 
 
 def serialize(data):
