@@ -1,14 +1,43 @@
+from enum import Enum
 from inspect import signature
+from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, root_validator, validator
 
 from yatsm import jobs
+
+
+class ScheduleOptions(str, Enum):
+    no_schedule = "now"
+    date = "date"
+    interval = "interval"
+    cron = "cron"
+
+
+class IntervalOption(BaseModel):
+    week: Optional[int]
+    days: Optional[int]
+    hours: Optional[int]
+    minutes: Optional[int]
+    seconds: Optional[int]
+    start_date: Optional[str]
+    end_date: Optional[str]
+    jitter: Optional[int]
 
 
 class Job(BaseModel):
     task_name: str
     task_args: dict
     meta_data: dict = None
+    task_type: ScheduleOptions = ScheduleOptions.no_schedule
+    task_type_options: Optional[IntervalOption]
+
+    @root_validator()
+    def valid_task_options(cls, values):
+        if values["task_type"] == ScheduleOptions.interval:
+            if not isinstance(values["task_type_options"], IntervalOption):
+                raise ValueError("Task type options dont match the task type option")
+        return values
 
     @validator("task_name")
     def valid_task(cls, value):

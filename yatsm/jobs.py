@@ -1,14 +1,19 @@
 import dramatiq
 
 from yatsm.broker import broker as redis_broker
-from yatsm.db import db, serialize
+from yatsm.db import db, deserialize, serialize
 
 
 @dramatiq.actor(queue_name="default", broker=redis_broker)
 def success(message_data, result):
     print(f"The result of message {message_data['message_id']} was {result}.")
     data = db.Hash(message_data["options"]["message_id"])
-    data.update(result=serialize(result), message_data=serialize(message_data))
+    if "results" not in data:
+        r = []
+    else:
+        r = deserialize(data["results"])
+    r.append({"message_data": message_data, "result": result})
+    data.update(results=serialize(r))
 
 
 @dramatiq.actor(queue_name="default", broker=redis_broker)

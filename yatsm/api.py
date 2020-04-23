@@ -19,7 +19,7 @@ scheduler.start()
 async def add_job(
     job: models.Job, current_user: models.User = Depends(auth.get_current_active_user)
 ):
-    job = jobber.run_task(job, **job.task_args)
+    job = jobber.run_task(job)
     return {"job_id": job.id}
 
 
@@ -28,7 +28,7 @@ async def get_job(
     job_id: str, current_user: models.User = Depends(auth.get_current_active_user)
 ):
     result = jobber.get_result(job_id)
-    return {"job_id": job_id, **result}
+    return {"job_id": job_id, "results": result}
 
 
 @app.post("/token", response_model=models.Token)
