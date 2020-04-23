@@ -38,9 +38,13 @@ class BackgroundJobs:
             "message_id": str(self.generate_uid()),
         }
 
+    @staticmethod
+    def get_job_ref(name):
+        return getattr(jobs, name)
+
     def run_task_interval(self, job) -> Job:
-        task = getattr(jobs, job.task_name)
-        interval_args = {k: v for k, v in job.task_type_options.dict().items() if v}
+        task = BackgroundJobs.get_job_ref(job.task_name)
+        interval_args = {k: v for k, v in job.interval_options.dict().items() if v}
         tsk_kwargs = {"kwargs": job.task_args, **self.default_task_options()}
         if job.meta_data:
             tsk_kwargs.update({**job.meta_data})
@@ -55,11 +59,30 @@ class BackgroundJobs:
         self.tasks[tsk_kwargs["message_id"]] = job
         return job
 
-    def run_task(self, job: models.Job) -> Job:
-        if job.task_type == ScheduleOptions.interval:
-            return self.run_task_interval(job)
+    def run_task_cron(self, job) -> Job:
+        task = BackgroundJobs.get_job_ref(job.task_name)
+        cron_args = {k: v for k, v in job.cron_options.dict().items() if v}
+        if "expression" in cron_args:
+            trigger = CronTrigger.from_crontab(cron_args.pop("expression"))
+        else:
+            trigger = "cron"
+        tsk_kwargs = {"kwargs": job.task_args, **self.default_task_options()}
+        if job.meta_data:
+            tsk_kwargs.update({**job.meta_data})
+        job_params = dict(
+            kwargs=tsk_kwargs,
+            replace_existing=True,
+            id=tsk_kwargs["message_id"],
+            trigger=trigger,
+        )
+        if isinstance(trigger, str):
+            job_params.update(**cron_args)
+        job = self._scheduler.add_job(task.send_with_options, **job_params)
+        self.tasks[tsk_kwargs["message_id"]] = job
+        return job
 
-        task = getattr(jobs, job.task_name)
+    def run_task_right_now(self, job):
+        task = BackgroundJobs.get_job_ref(job.task_name)
         task_id = str(uuid4())
         tsk_kwargs = {
             "on_success": jobs.success,
@@ -77,6 +100,14 @@ class BackgroundJobs:
         )
         self.tasks[task_id] = job
         return job
+
+    def run_task(self, job: models.Job) -> Job:
+        if job.task_type == ScheduleOptions.interval:
+            return self.run_task_interval(job)
+        if job.task_type == ScheduleOptions.cron:
+            return self.run_task_cron(job)
+        else:
+            return self.run_task_right_now(job)
 
     @staticmethod
     def get_result(task_id):
