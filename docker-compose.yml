@@ -1,0 +1,44 @@
+version: "3.3"
+services:
+
+  queue:
+    image: redis
+    ports:
+    - 6379:6379
+
+  backend:
+    image: '${DOCKER_IMAGE_BACKEND}:${TAG-latest}'
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${DOMAIN}
+      - SERVER_HOST=https://${DOMAIN}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+    depends_on:
+      - queue
+    ports:
+      - 80:80
+    volumes:
+      - ./yatsm:/app/yatsm
+
+  worker:
+    image: '${DOCKER_IMAGE_BACKEND}:${TAG-latest}'
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${DOMAIN}
+      - SERVER_HOST=https://${DOMAIN}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+    command: "dramatiq yatsm.jobs:redis_broker -v"
+    depends_on:
+      - queue
+    volumes:
+      - ./yatsm:/app/yatsm

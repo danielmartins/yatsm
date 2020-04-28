@@ -36,42 +36,7 @@ Pré-requisitos
 --------------
 
 * Docker -> https://docs.docker.com/engine/install/
-
-
-Redis
-^^^^^
-Redis é um pré-requisito fundamental para realização da IPC entre os componentes da aplicação. 
-
-Após instalação do docker, inicie um redis para viabilizar a execução do projeto.
-
-  $ docker run --name yatsm_redis -p 6379:6379 -d redis
-
-Antes de cadastrar qualquer job, você precisar iniciar o worker
-
-Portanto abra um novo terminal e execute:
-
-  $ yatsm worker start
-
-
-Rest API
-^^^^^^^^
-
-
-Em outro terminal inicialize a API
-
-  $ yatsm api start
-  
-Por padrão a API é inicializada na porta 8000
-
-
-Documentação
-^^^^^^^^^^^^
-
-A API disponibiliza uma documentação por OpenApi Specification no endereço:
-
-http://localhost:8000/docs
-
-Nela você encontra informações de como criar e acompanhar a execução dos jobs. 
+* Docker Compose -> https://github.com/docker/compose
 
 
 Desenvolvimento
@@ -88,6 +53,22 @@ Projeto foi desenvolvido principalmente com:
 
 
 
+Quickstart
+----------
+
+  $ docker-compose up -d
+
+
+Documentação
+------------
+
+A API disponibiliza uma documentação por OpenApi Specification no endereço:
+
+http://localhost/docs
+
+Nela você encontra informações de como criar e acompanhar a execução dos jobs.
+
+
 
 Instalaçao de dependências
 --------------------------
@@ -102,9 +83,9 @@ Testes
 
 
 
-Possível Roadmap Futuro
------------------------
+TODO
+----
 
-  * Separar Scheduler em um processo separado;
+  * Separar Scheduler;
   * Implementar desenho de canvas/pipelines de jobs via REST Api.
-  * Implementar monitoramento de jobs com níveis de progresso. 
+  * Implementar monitoramento de jobs com níveis de progresso.

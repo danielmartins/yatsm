@@ -41,7 +41,7 @@ def redis_broker(r):
 
 @pytest.fixture
 def request_client(redis_broker):
-    from yatsm.api import app
+    from yatsm.main import app
 
     client = TestClient(app)
     return client
