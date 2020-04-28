@@ -21,8 +21,6 @@ RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; els
 ARG INSTALL_JUPYTER=false
 RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
 
-ADD ./yatsm/main.py /app/
+#ADD ./yatsm/main.py /app/
 ADD ./yatsm/ /app/yatsm/
 ENV PYTHONPATH=/app
-
-EXPOSE 8000
